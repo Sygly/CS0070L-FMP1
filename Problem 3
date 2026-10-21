@@ -1,0 +1,233 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ */
+
+package com.mycompany.inventorymanagementsystem;
+
+/**
+ *
+ * @author smgaray
+ */
+
+import java.util.Scanner;
+
+class InventoryException extends Exception {
+    public InventoryException(String message) {
+        super(message);
+    }
+}
+
+class Product {
+    private int id;
+    private String name;
+    private int quantity;
+
+    public Product(int id, String name, int quantity) {
+        this.id = id;
+        this.name = name;
+        this.quantity = quantity;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void restock(int amount) throws InventoryException {
+        if (amount <= 0) {
+            throw new InventoryException("Amount must be positive.");
+        }
+
+        if (amount > Integer.MAX_VALUE - quantity) {
+            throw new InventoryException("Quantity is too large.");
+        }
+
+        quantity += amount;
+    }
+
+    public void sell(int amount) throws InventoryException {
+        if (amount <= 0) {
+            throw new InventoryException("Amount must be positive.");
+        }
+
+        if (amount > quantity) {
+            throw new InventoryException("Insufficient stock.");
+        }
+
+        quantity -= amount;
+    }
+}
+
+class Inventory {
+    private Product[] products = new Product[4];
+    private int count = 0;
+
+    public Product findById(int id) {
+        for (int i = 0; i < count; i++) {
+            if (products[i].getId() == id) {
+                return products[i];
+            }
+        }
+        return null;
+    }
+
+    public void add(int id, String name, int quantity)
+            throws InventoryException {
+
+        if (findById(id) != null) {
+            throw new InventoryException("Duplicate product ID.");
+        }
+
+        if (quantity < 0) {
+            throw new InventoryException("Quantity cannot be negative.");
+        }
+
+        if (name == null || name.trim().isEmpty()) {
+            throw new InventoryException("Product name cannot be blank.");
+        }
+
+        for (int i = 0; i < count; i++) {
+            if (products[i].getName().equalsIgnoreCase(name.trim())) {
+                throw new InventoryException("Duplicate product name.");
+            }
+        }
+
+        if (count >= products.length) {
+            throw new InventoryException("Inventory is full.");
+        }
+
+        products[count] = new Product(id, name.trim(), quantity);
+        count++;
+
+        System.out.println("Product added successfully!");
+    }
+
+    public void restock(int id, int amount)
+            throws InventoryException {
+
+        Product product = findById(id);
+
+        if (product == null) {
+            throw new InventoryException("Product not found.");
+        }
+
+        product.restock(amount);
+        System.out.println("Restock successful!");
+        System.out.println("New Quantity: " + product.getQuantity());
+    }
+
+    public void sell(int id, int amount)
+            throws InventoryException {
+
+        Product product = findById(id);
+
+        if (product == null) {
+            throw new InventoryException("Product not found.");
+        }
+
+        product.sell(amount);
+        System.out.println("Sale successful!");
+        System.out.println("New Quantity: " + product.getQuantity());
+    }
+
+    public void display() {
+        if (count == 0) {
+            System.out.println("Inventory is empty.");
+            return;
+        }
+
+        System.out.println("\n===== PRODUCT LIST =====");
+
+        for (int i = 0; i < count; i++) {
+            System.out.println("ID: " + products[i].getId());
+            System.out.println("Name: " + products[i].getName());
+            System.out.println("Quantity: " + products[i].getQuantity());
+            System.out.println("----------------------");
+        }
+    }
+}
+
+public class InventoryManagementSystem {
+
+    public static void main(String[] args) {
+       Scanner sc = new Scanner(System.in);
+        Inventory inventory = new Inventory();
+        int choice = -1;
+
+        do {
+            System.out.println("\n===== INVENTORY MANAGEMENT =====");
+            System.out.println("1. Add Product");
+            System.out.println("2. Restock Product");
+            System.out.println("3. Sell Product");
+            System.out.println("4. List Products");
+            System.out.println("0. Exit");
+            System.out.print("Enter choice: ");
+
+            try {
+                choice = Integer.parseInt(sc.nextLine().trim());
+
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter Product ID: ");
+                        int id = Integer.parseInt(sc.nextLine().trim());
+
+                        System.out.print("Enter Product Name: ");
+                        String name = sc.nextLine();
+
+                        System.out.print("Enter Starting Quantity: ");
+                        int quantity = Integer.parseInt(sc.nextLine().trim());
+
+                        inventory.add(id, name, quantity);
+                        break;
+
+                    case 2:
+                        System.out.print("Enter Product ID: ");
+                        int restockId = Integer.parseInt(sc.nextLine().trim());
+
+                        System.out.print("Enter Amount: ");
+                        int restockAmount = Integer.parseInt(sc.nextLine().trim());
+
+                        inventory.restock(restockId, restockAmount);
+                        break;
+
+                    case 3:
+                        System.out.print("Enter Product ID: ");
+                        int sellId = Integer.parseInt(sc.nextLine().trim());
+
+                        System.out.print("Enter Amount: ");
+                        int sellAmount = Integer.parseInt(sc.nextLine().trim());
+
+                        inventory.sell(sellId, sellAmount);
+                        break;
+
+                    case 4:
+                        inventory.display();
+                        break;
+
+                    case 0:
+                        System.out.println("Exiting program...");
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+
+            } catch (InventoryException e) {
+                System.out.println("Error: " + e.getMessage());
+
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Please enter a valid number.");
+            }
+
+        } while (choice != 0);
+
+        sc.close();
+    }
+}
